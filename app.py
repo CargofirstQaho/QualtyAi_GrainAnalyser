@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 import re
 import datetime
 import base64
-    
+import pandas as pd
     # Branding & Configuration
 APP_TITLE = "Qualty AI"
 APP_ICON = "🔬"
@@ -22,6 +22,7 @@ HISTORY_LIMIT = 10 # Configurable number of history items
 # Load API Key
 load_dotenv()
 api_key = os.environ.get("GOOGLE_API_KEY")
+
 # Set Page Config
 st.set_page_config(
     page_title=APP_TITLE,
@@ -260,18 +261,44 @@ def get_color_from_grade(grade):
 def render_counts_table(analysis):
     """Render a summary table of grain counts before other outputs."""
     counts = analysis.get("counts", {})
-    # Build a dictionary for display
+
+    # Convert numbers to formatted strings
+    def format_value(key, is_float=False):
+        val = counts.get(key, "N/A")
+        if val == "N/A":
+            return val
+        if is_float:
+            return f"{val:.2f}"  # 2 decimal places for floats
+        return str(int(val))  # integers as strings
+
+    # Build table dictionary
     table_data = {
-        "Total Grains": counts.get("total", "N/A"),
-        "Damaged & Discoloured": counts.get("damaged_discoloured", "N/A"),
-        "Foreign Matter": counts.get("foreign_matter", "N/A"),
-        "Broken": counts.get("broken", "N/A"),
-        "Average Length (mm)": counts.get("average_length_mm", "N/A"),
-        "Average Width (mm)": counts.get("average_width_mm", "N/A"),
-        "Chalky Grains": counts.get("chalky_grains", "N/A"),
+        "Metric": [
+            "Total Grains",
+            "Damaged & Discoloured",
+            "Foreign Matter",
+            "Broken",
+            "Average Length (mm)",
+            "Average Width (mm)",
+            "Chalky Grains",
+        ],
+        "Value": [
+            format_value("total"),
+            format_value("damaged_discoloured"),
+            format_value("foreign_matter"),
+            format_value("broken"),
+            format_value("average_length_mm", is_float=True),
+            format_value("average_width_mm", is_float=True),
+            format_value("chalky_grains"),
+        ]
     }
+
+    df = pd.DataFrame(table_data)
+
     st.markdown('<h2 class="section-header">Grain Count Summary</h2>', unsafe_allow_html=True)
-    st.table(table_data)
+    st.table(df)
+
+
 def render_progress_circle(value, label, color_class="blue"):
     """Renders a circular progress bar with CSS."""
     # Map quality classes to hex colors
@@ -285,7 +312,7 @@ def render_progress_circle(value, label, color_class="blue"):
     display_value = "N/A"
     progress_value = 0
     if value is not None and isinstance(value, (int, float)):
-        display_value = f"{int(value)}%"
+        display_value = f"{round(value)}%"
         progress_value = max(0, min(100, value)) # Clamp between 0 and 100
     # Calculate rotation for the progress bar fill
     # Rotation logic might need adjustment based on exact CSS implementation
@@ -817,7 +844,7 @@ with tab2:
                 grade_info = nested_analysis.get('overall_grade', {})
                 grade_text = grade_info.get('grade', 'N/A')
                 score_val = grade_info.get('score')
-                score_text = f"({score_val}%)" if isinstance(score_val, (int, float)) else ""
+                score_text = f"({int(score_val)}%)" if isinstance(score_val, (int, float)) else ""
                 display_title += f" (Detected {detected_grain_in_analysis})"
             elif is_error:
                 display_title = f"Failed Analysis ({selected_g})"
@@ -912,4 +939,4 @@ st.markdown(f"""
 <div style="text-align: center; margin-top: 1rem; padding: 1rem; border-top: 1px solid #eee; color: #777; font-size: 0.9rem;">
     {FOOTER_TEXT} | AI analysis engine may have limitations. Verify critical results.
 </div>
-""", unsafe_allow_html=True)
+""", unsafe_allow_html=True)            
