@@ -174,4 +174,5 @@ GOOGLE_API_KEY="your_api_key_here"
 - Content blocked by filter: try a different photo or crop out non-grain content.
 - Poor results: improve lighting, focus, and spread grains on a plain background.
 
-If you want, I can produce a short example of the JSON structure expected from the Gemini response (for unit tests or mocks).
+If you want, I can produce a short example of the JSON structure expected from the Gemini response (for unit tests or mocks).#   Q u a l t y A i _ G r a i n A n a l y s e r  
+ 
